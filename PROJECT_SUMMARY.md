@@ -6,11 +6,17 @@ This repository now contains a complete Minecraft 1.21 Fabric mod called "Estoni
 
 ## Implemented Features
 
-### ✅ 1. Auto Fishing
-- **Detection Method 1**: Mixin-based detection of the "Reel it in!" overlay message (green exclamation mark text)
-- **Detection Method 2**: Fallback bobber velocity detection for reliability
+### ✅ 1. Pixel-Based Auto Fishing Detection
+- **Primary Detection**: Pixel-coordinate-based color detection at fixed screen positions
+  - Monitors screen coordinates above the hotbar (action bar area)
+  - Detects green exclamation mark color: RGB ~(85, 255, 85)
+  - Detects yellow "Reel it in!" text color: RGB ~(255, 255, 85)
+  - Samples 5 pixels horizontally, requires 2+ matches for confirmation
+  - Checks every 2 ticks for optimal performance
+- **Fallback Detection 1**: Mixin-based detection of "Reel it in!" overlay message
+- **Fallback Detection 2**: Bobber velocity detection for additional reliability
 - **Automatic Behavior**: 
-  - Detects when a fish bites
+  - Detects when a fish bites using pixel color matching
   - Reels in the fishing rod
   - Automatically casts the rod back out
   - Continues indefinitely until disabled
@@ -30,7 +36,7 @@ This repository now contains a complete Minecraft 1.21 Fabric mod called "Estoni
 - Seamless integration with fishing automation
 
 ### ✅ 4. Toggle Mechanism
-- **Keybind**: Press `K` to toggle the mod on/off
+- **Keybind**: Press `F` to toggle the mod on/off
 - **Visual Feedback**: Chat messages show mod state
   - Green "[Estonic Autofishing] Enabled" when turned on
   - Red "[Estonic Autofishing] Disabled" when turned off
@@ -52,8 +58,9 @@ Estonic-Autofishing/
 └── src/main/
     ├── java/com/zoey/estonicautofishing/
     │   ├── EstonicAutofishing.java       # Main mod class
+    │   ├── PixelDetector.java            # Pixel-based color detection
     │   └── mixin/
-    │       └── InGameHudMixin.java       # Overlay message detection
+    │       └── InGameHudMixin.java       # Overlay message detection (fallback)
     └── resources/
         ├── fabric.mod.json               # Mod metadata
         ├── estonicautofishing.mixins.json # Mixin configuration
@@ -74,10 +81,18 @@ Estonic-Autofishing/
 
 **EstonicAutofishing.java** (Main Class)
 - Implements `ClientModInitializer` for Fabric integration
-- Registers keybinding for toggle (K key)
+- Registers keybinding for toggle (F key)
 - Tick-based event system for continuous monitoring
 - State machine for leather boots handling
-- Dual detection system for fish bites
+- Triple detection system for fish bites (pixel, text, velocity)
+- Integrates PixelDetector for screen color sampling
+
+**PixelDetector.java** (Pixel Detection)
+- Reads pixel colors from framebuffer using OpenGL
+- Converts scaled coordinates to framebuffer coordinates
+- Samples multiple pixels for reliable detection
+- Color range matching for green exclamation and yellow text
+- Optimized for performance (checks every 2 ticks)
 
 **InGameHudMixin.java** (Mixin)
 - Intercepts HUD overlay messages
@@ -110,13 +125,14 @@ Estonic-Autofishing/
 4. Find the JAR in `build/libs/`
 5. Install Fabric Loader and Fabric API for Minecraft 1.21
 6. Place the JAR in `.minecraft/mods/`
-7. Launch Minecraft and press `K` to toggle the mod
+7. Launch Minecraft and press `F` to toggle the mod
 
 ### For Developers
 - All source code is documented
 - See `TECHNICAL.md` for implementation details
 - Mixins are properly configured
 - Code follows Fabric modding best practices
+- PixelDetector class handles all screen color sampling
 
 ## Documentation Files
 
