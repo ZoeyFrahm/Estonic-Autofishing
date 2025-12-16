@@ -2,12 +2,26 @@
 
 A Minecraft Fabric mod for automatic fishing with leather boots detection support.
 
+## Download
+
+To download this project:
+1. Click the green "Code" button on GitHub
+2. Select "Download ZIP" to get the entire project
+3. Extract the ZIP file to your desired location
+4. Follow the building instructions below
+
+Alternatively, clone the repository:
+```bash
+git clone https://github.com/ZoeyFrahm/Estonic-Autofishing.git
+```
+
 ## Features
 
 1. **Auto Fishing:**
-   - Automatically detects when a fish bites
-   - Reels in the fishing rod and casts it back out
+   - Automatically detects when a fish bites by monitoring the yellow "Reel it in!" message that appears above the hotbar (action bar)
+   - Reels in the fishing rod and casts it back out automatically
    - Adds slight random crosshair movement to avoid AFK detection
+   - Uses dual detection: overlay message (primary) and bobber velocity (fallback) for reliability
 
 2. **Leather Boots Detection:**
    - Automatically detects Leather Boots in the hotbar
@@ -50,9 +64,10 @@ The mod is fully implemented and ready to build once the network issue is resolv
 
 ## Installation
 
-1. Download and install Fabric Loader for Minecraft 1.21
-2. Place the mod JAR file in your `.minecraft/mods` folder
-3. Launch Minecraft with the Fabric profile
+1. Download and install [Fabric Loader](https://fabricmc.net/use/) for Minecraft 1.21
+2. Download [Fabric API](https://modrinth.com/mod/fabric-api) version 0.105.0+1.21 or higher
+3. Place both the Fabric API JAR and this mod's JAR file in your `.minecraft/mods` folder
+4. Launch Minecraft with the Fabric profile
 
 ## Usage
 
