@@ -1,6 +1,5 @@
 package com.zoey.estonicautofishing;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import org.lwjgl.BufferUtils;
@@ -52,7 +51,7 @@ public class PixelDetector {
      * @return true if fishing indicator is detected
      */
     public boolean detectFishingIndicator() {
-        if (client.getFramebuffer() == null) {
+        if (client.getFramebuffer() == null || client.getWindow() == null) {
             return false;
         }
         
@@ -93,14 +92,14 @@ public class PixelDetector {
             boolean detected = (greenMatches >= REQUIRED_MATCHES) || (yellowMatches >= REQUIRED_MATCHES);
             
             if (detected) {
-                LOGGER.debug("Fishing indicator detected! Green matches: {}, Yellow matches: {}", 
+                LOGGER.info("Fishing indicator detected! Green matches: {}, Yellow matches: {}", 
                     greenMatches, yellowMatches);
             }
             
             return detected;
             
         } catch (Exception e) {
-            LOGGER.error("Error detecting fishing indicator", e);
+            LOGGER.debug("Error detecting fishing indicator: {}", e.getMessage());
             return false;
         }
     }
@@ -114,12 +113,11 @@ public class PixelDetector {
      */
     private Color getPixelColor(int x, int y) {
         try {
-            if (!RenderSystem.isOnRenderThread()) {
-                // Must be on render thread to read framebuffer
+            Framebuffer framebuffer = client.getFramebuffer();
+            if (framebuffer == null) {
                 return null;
             }
             
-            Framebuffer framebuffer = client.getFramebuffer();
             int fbWidth = framebuffer.textureWidth;
             int fbHeight = framebuffer.textureHeight;
             
@@ -165,7 +163,7 @@ public class PixelDetector {
             return new Color(r, g, b, a);
             
         } catch (Exception e) {
-            LOGGER.debug("Error reading pixel at ({}, {}): {}", x, y, e.getMessage());
+            // Silently fail - will retry next check
             return null;
         }
     }
