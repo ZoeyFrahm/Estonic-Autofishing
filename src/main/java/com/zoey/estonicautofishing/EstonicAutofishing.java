@@ -49,11 +49,11 @@ public class EstonicAutofishing implements ClientModInitializer {
         MinecraftClient client = MinecraftClient.getInstance();
         pixelDetector = new PixelDetector(client);
         
-        // Register toggle keybind (F key)
+        // Register toggle keybind (F8 key)
         toggleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.estonicautofishing.toggle",
             InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_F,
+            GLFW.GLFW_KEY_F8,
             "category.estonicautofishing"
         ));
         

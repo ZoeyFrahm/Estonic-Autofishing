@@ -1,0 +1,97 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: 'gradle'
+    
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    
+    - name: Build with Gradle
+      run: ./gradlew build --no-daemon
+    
+    - name: Get version
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.get_version.outputs.VERSION }}
+        name: Estonic Autofishing v${{ steps.get_version.outputs.VERSION }}
+        body: |
+          # Estonic Autofishing v${{ steps.get_version.outputs.VERSION }}
+          
+          ## Features
+          - 🎣 Auto fishing with pixel-based detection
+          - ⌨️ F8 key to toggle on/off
+          - 👢 Automatic leather boots detection and usage
+          - 🎯 Crosshair randomization to avoid AFK detection
+          
+          ## Installation
+          1. Install [Minecraft 1.21](https://www.minecraft.net/)
+          2. Install [Fabric Loader 0.16.5+](https://fabricmc.net/use/)
+          3. Download [Fabric API 0.105.0+1.21](https://modrinth.com/mod/fabric-api)
+          4. Download the JAR file below
+          5. Place both JARs in `.minecraft/mods/` folder
+          6. Launch Minecraft and press F8 to toggle the mod
+          
+          ## Requirements
+          - Minecraft 1.21
+          - Fabric Loader 0.16.5 or higher
+          - Fabric API 0.105.0+1.21 or higher
+          - Java 21
+          
+          ## Usage
+          1. Join a world
+          2. Press **F8** to enable
+          3. Hold a fishing rod
+          4. Mod will automatically fish
+          5. Press **F8** to disable
+          
+          ## Technical Details
+          - Triple-layer fish detection (pixel, text, velocity)
+          - Detects yellow "Reel it in!" text and green exclamation mark
+          - Automatic leather boots handling
+          - Robust cooldown system
+          
+          ---
+          
+          📝 [View Changelog](https://github.com/${{ github.repository }}/commits)
+          🐛 [Report Issues](https://github.com/${{ github.repository }}/issues)
+          📚 [Documentation](https://github.com/${{ github.repository }}/blob/main/README.md)
+        files: |
+          build/libs/estonic-autofishing-*.jar
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
