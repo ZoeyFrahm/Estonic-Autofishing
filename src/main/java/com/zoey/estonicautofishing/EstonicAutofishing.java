@@ -10,6 +10,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,10 @@ public class EstonicAutofishing implements ClientModInitializer {
     // For detecting "Reel it in!" message
     private static boolean reelItInDetected = false;
     private static int reelItInCooldown = 0;
+    
+    // For scheduled recast
+    private static boolean needsRecast = false;
+    private static int recastTimer = 0;
     
     @Override
     public void onInitializeClient() {
@@ -74,6 +79,16 @@ public class EstonicAutofishing implements ClientModInitializer {
             }
             if (reelItInCooldown > 0) {
                 reelItInCooldown--;
+            }
+            
+            // Handle scheduled recast
+            if (needsRecast) {
+                if (recastTimer > 0) {
+                    recastTimer--;
+                } else {
+                    needsRecast = false;
+                    castFishingRod(client);
+                }
             }
             
             // Handle leather boots processing
@@ -158,17 +173,9 @@ public class EstonicAutofishing implements ClientModInitializer {
         castCooldown = 10; // 0.5 seconds
         justCast = true;
         
-        // Schedule recast
-        new Thread(() -> {
-            try {
-                Thread.sleep(500);
-                if (enabled && client.player != null) {
-                    castFishingRod(client);
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }).start();
+        // Schedule recast using tick-based timer
+        needsRecast = true;
+        recastTimer = 10; // 10 ticks = 0.5 seconds
     }
     
     private void castFishingRod(MinecraftClient client) {
@@ -231,11 +238,11 @@ public class EstonicAutofishing implements ClientModInitializer {
     }
     
     private void rightClick(MinecraftClient client) {
-        // Simulate right-click
+        // Simulate right-click with main hand explicitly
         if (client.interactionManager != null && client.player != null) {
             client.interactionManager.interactItem(
                 client.player,
-                client.player.getActiveHand()
+                Hand.MAIN_HAND
             );
         }
     }
