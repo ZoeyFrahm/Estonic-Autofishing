@@ -36,7 +36,7 @@ git clone https://github.com/ZoeyFrahm/Estonic-Autofishing.git
    - Returns to fishing automatically after use
 
 3. **Toggle:**
-   - Press `F` to enable/disable the mod
+   - Press `F8` to enable/disable the mod
    - Visual feedback in chat when toggled
 
 ## Requirements
@@ -79,10 +79,10 @@ The mod is fully implemented and ready to build once the network issue is resolv
 ## Usage
 
 1. Start Minecraft and join a world
-2. Press `F` to enable the mod
+2. Press `F8` to enable the mod
 3. Hold a fishing rod and the mod will automatically fish
 4. If Leather Boots appear in your hotbar, the mod will automatically use them
-5. Press `F` again to disable the mod
+5. Press `F8` again to disable the mod
 
 ## License
 
