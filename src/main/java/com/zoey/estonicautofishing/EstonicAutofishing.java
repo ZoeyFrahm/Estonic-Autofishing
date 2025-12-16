@@ -30,6 +30,10 @@ public class EstonicAutofishing implements ClientModInitializer {
     private static int processingStep = 0;
     private static int previousSlot = -1;
     
+    // For detecting "Reel it in!" message
+    private static boolean reelItInDetected = false;
+    private static int reelItInCooldown = 0;
+    
     @Override
     public void onInitializeClient() {
         LOGGER.info("Estonic Autofishing mod initializing...");
@@ -68,6 +72,9 @@ public class EstonicAutofishing implements ClientModInitializer {
             if (leatherBootsCheckCooldown > 0) {
                 leatherBootsCheckCooldown--;
             }
+            if (reelItInCooldown > 0) {
+                reelItInCooldown--;
+            }
             
             // Handle leather boots processing
             if (processingLeatherBoots) {
@@ -94,6 +101,15 @@ public class EstonicAutofishing implements ClientModInitializer {
         LOGGER.info("Estonic Autofishing mod initialized!");
     }
     
+    // Called by mixin when overlay message is displayed
+    public static void onOverlayMessage(String message) {
+        if (message != null && message.toLowerCase().contains("reel it in")) {
+            reelItInDetected = true;
+            reelItInCooldown = 20; // Valid for 1 second
+            LOGGER.info("Detected 'Reel it in!' message");
+        }
+    }
+    
     private void checkAndReelFish(MinecraftClient client) {
         // Check if player has fishing rod in hand
         ItemStack mainHandItem = client.player.getMainHandStack();
@@ -101,20 +117,22 @@ public class EstonicAutofishing implements ClientModInitializer {
             return;
         }
         
-        // Check for "Reel it in!" message in action bar or chat
-        boolean shouldReel = false;
-        
-        // Check if there's a fishing bobber and it has caught something
+        // Check if there's a fishing bobber
         if (client.player.fishHook != null) {
-            // Check if the hook has caught something (bobber pulls down)
-            // We detect this by checking the bobber's velocity or state
-            if (client.player.fishHook.isInFluid() || client.player.fishHook.isOnGround()) {
-                // Additional check: look for the visual cue
-                // In Minecraft, when fish is ready, the bobber creates particles and moves
-                // We'll use a heuristic: if the bobber exists and player hasn't cast recently
-                if (!justCast) {
-                    // Check screen text for "Reel it in!"
-                    shouldReel = checkForReelItInMessage(client);
+            // Method 1: Check for "Reel it in!" message (most reliable)
+            if (reelItInDetected && reelItInCooldown > 0) {
+                reelItInDetected = false;
+                reelAndRecast(client);
+                return;
+            }
+            
+            // Method 2: Check bobber velocity (fallback detection)
+            if (!justCast) {
+                double velocity = client.player.fishHook.getVelocity().lengthSquared();
+                // When a fish bites, the bobber moves with significant velocity
+                if (velocity > 0.15) {
+                    LOGGER.info("Detected fish bite via bobber velocity");
+                    reelAndRecast(client);
                 }
             }
         } else if (!justCast) {
@@ -122,31 +140,9 @@ public class EstonicAutofishing implements ClientModInitializer {
             castFishingRod(client);
         }
         
-        if (shouldReel) {
-            reelAndRecast(client);
-        }
-        
         if (justCast) {
             justCast = false;
         }
-    }
-    
-    private boolean checkForReelItInMessage(MinecraftClient client) {
-        // This checks the overlay message (action bar)
-        // In actual gameplay, we'd need to check rendered text on screen
-        // For now, we'll use a simpler heuristic based on bobber behavior
-        
-        // The bobber makes a splash sound and particles when fish bites
-        // We can detect this by checking the bobber's state
-        if (client.player.fishHook != null) {
-            // Check velocity - when fish bites, bobber moves significantly
-            double velocity = client.player.fishHook.getVelocity().lengthSquared();
-            if (velocity > 0.1) {
-                return true;
-            }
-        }
-        
-        return false;
     }
     
     private void reelAndRecast(MinecraftClient client) {

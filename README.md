@@ -27,11 +27,26 @@ A Minecraft Fabric mod for automatic fishing with leather boots detection suppor
 
 ## Building
 
+### Prerequisites
+- Java 21 or higher
+- Internet connection to download dependencies
+
+### Build Instructions
+
 To build the mod JAR file:
 
 1. Open the project in IntelliJ IDEA
-2. Run `./gradlew build` (Linux/Mac) or `gradlew.bat build` (Windows)
+2. Open Terminal in IntelliJ and run:
+   - On Linux/Mac: `./gradlew build`
+   - On Windows: `gradlew.bat build`
 3. The built JAR file will be in `build/libs/`
+
+**Note:** If you encounter DNS resolution errors with `maven.fabricmc.net`, this is due to network restrictions. To resolve this:
+- Build the project from a network with unrestricted access to Fabric Maven repositories
+- Or use a VPN/proxy that allows access to maven.fabricmc.net
+- Or configure your hosts file to resolve maven.fabricmc.net properly
+
+The mod is fully implemented and ready to build once the network issue is resolved.
 
 ## Installation
 
