@@ -36,12 +36,9 @@ public class PixelDetector {
     
     private final MinecraftClient client;
     private ByteBuffer pixelBuffer;
-    private int lastWidth = -1;
-    private int lastHeight = -1;
     
     public PixelDetector(MinecraftClient client) {
         this.client = client;
-        this.pixelBuffer = BufferUtils.createByteBuffer(4); // RGBA
     }
     
     /**
@@ -135,11 +132,9 @@ public class PixelDetector {
                 return null;
             }
             
-            // Ensure buffer is large enough
-            if (lastWidth != fbWidth || lastHeight != fbHeight) {
+            // Ensure buffer is allocated (only needs 4 bytes for one RGBA pixel)
+            if (pixelBuffer == null) {
                 pixelBuffer = BufferUtils.createByteBuffer(4);
-                lastWidth = fbWidth;
-                lastHeight = fbHeight;
             }
             
             // Bind framebuffer and read pixel
