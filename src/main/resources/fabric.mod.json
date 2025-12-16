@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "estonicautofishing",
+  "version": "${version}",
+  "name": "Estonic Autofishing",
+  "description": "Automatic fishing mod with leather boots detection",
+  "authors": [
+    "ZoeyFrahm"
+  ],
+  "contact": {
+    "homepage": "https://github.com/ZoeyFrahm/Estonic-Autofishing",
+    "sources": "https://github.com/ZoeyFrahm/Estonic-Autofishing"
+  },
+  "license": "MIT",
+  "icon": "assets/estonicautofishing/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.zoey.estonicautofishing.EstonicAutofishing"
+    ]
+  },
+  "mixins": [
+    "estonicautofishing.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
