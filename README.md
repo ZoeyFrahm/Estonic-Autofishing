@@ -17,11 +17,18 @@ git clone https://github.com/ZoeyFrahm/Estonic-Autofishing.git
 
 ## Features
 
-1. **Auto Fishing:**
-   - Automatically detects when a fish bites by monitoring the yellow "Reel it in!" message that appears above the hotbar (action bar)
+1. **Auto Fishing with Pixel-Based Detection:**
+   - Automatically detects when a fish bites using pixel-coordinate-based color detection
+   - Monitors fixed pixel coordinates above the hotbar for the green exclamation mark and yellow "Reel it in!" text
+   - Samples screen pixels looking for specific RGB color values:
+     - Green exclamation mark: RGB ~(85, 255, 85)
+     - Yellow text: RGB ~(255, 255, 85)
+   - Triple detection system for reliability:
+     - Primary: Pixel-based color detection at action bar coordinates
+     - Secondary: Overlay message detection (fallback)
+     - Tertiary: Bobber velocity detection (fallback)
    - Reels in the fishing rod and casts it back out automatically
    - Adds slight random crosshair movement to avoid AFK detection
-   - Uses dual detection: overlay message (primary) and bobber velocity (fallback) for reliability
 
 2. **Leather Boots Detection:**
    - Automatically detects Leather Boots in the hotbar
@@ -29,7 +36,7 @@ git clone https://github.com/ZoeyFrahm/Estonic-Autofishing.git
    - Returns to fishing automatically after use
 
 3. **Toggle:**
-   - Press `K` to enable/disable the mod
+   - Press `F` to enable/disable the mod
    - Visual feedback in chat when toggled
 
 ## Requirements
@@ -72,10 +79,10 @@ The mod is fully implemented and ready to build once the network issue is resolv
 ## Usage
 
 1. Start Minecraft and join a world
-2. Press `K` to enable the mod
+2. Press `F` to enable the mod
 3. Hold a fishing rod and the mod will automatically fish
 4. If Leather Boots appear in your hotbar, the mod will automatically use them
-5. Press `K` again to disable the mod
+5. Press `F` again to disable the mod
 
 ## License
 

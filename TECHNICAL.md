@@ -9,9 +9,15 @@ This is a Minecraft 1.21 Fabric mod that provides automated fishing functionalit
 ### 1. Auto Fishing
 The mod automatically detects when a fish bites and reels it in, then recasts the fishing rod.
 
-**Detection Methods:**
-- **Primary**: Mixin-based detection of the "Reel it in!" overlay message
-- **Fallback**: Bobber velocity detection (when velocity > 0.15)
+**Detection Methods (in priority order):**
+1. **Primary - Pixel-Based Detection**: Monitors specific screen coordinates above the hotbar (action bar area)
+   - Samples pixels in a horizontal line around screen center at Y = screenHeight - 68
+   - Detects green exclamation mark color: RGB(60-120, 220-255, 60-120)
+   - Detects yellow "Reel it in!" text color: RGB(220-255, 220-255, 50-120)
+   - Takes 5 samples spread across the area, requires 2+ matches for detection
+   - Checks every 2 ticks for optimal performance
+2. **Secondary - Overlay Message Detection**: Mixin-based detection of "Reel it in!" text (fallback)
+3. **Tertiary - Bobber Velocity Detection**: Monitors bobber movement velocity > 0.15 (fallback)
 
 **Anti-AFK Measures:**
 - Random crosshair movement (±1 degree in yaw and pitch) when reeling in
@@ -28,7 +34,7 @@ The mod automatically detects Leather Boots in the player's hotbar and uses them
 5. Resumes fishing automatically
 
 ### 3. Toggle Mechanism
-Press the `K` key to enable/disable the mod.
+Press the `F` key to enable/disable the mod.
 
 **Feedback:**
 - Green message when enabled: "[Estonic Autofishing] Enabled"
@@ -49,6 +55,7 @@ Estonic-Autofishing/
 └── src/main/
     ├── java/com/zoey/estonicautofishing/
     │   ├── EstonicAutofishing.java           # Main mod class
+    │   ├── PixelDetector.java                # Pixel-based color detection
     │   └── mixin/
     │       └── InGameHudMixin.java           # Mixin for detecting overlay messages
     └── resources/
@@ -68,21 +75,50 @@ Estonic-Autofishing/
 - `ClientModInitializer`: Fabric API entry point for client-side mods
 - `ClientTickEvents`: Handles per-tick game logic
 - `KeyBindingHelper`: Registers the toggle keybind
+- `PixelDetector`: Handles pixel-based color detection at specific screen coordinates
 
 **State Variables:**
 - `enabled`: Whether the mod is active
+- `pixelDetector`: Instance of PixelDetector for screen color sampling
 - `castCooldown`: Prevents immediate recasting
+- `pixelCheckCooldown`: Throttles pixel detection checks (every 2 ticks)
 - `leatherBootsCheckCooldown`: Throttles boots detection
 - `processingLeatherBoots`: Flag for boots handling sequence
-- `reelItInDetected`: Flag set by mixin when message appears
+- `reelItInDetected`: Flag set by mixin when message appears (fallback)
 
 **Core Methods:**
-- `onOverlayMessage()`: Called by mixin when overlay text appears
-- `checkAndReelFish()`: Main fishing logic
+- `onOverlayMessage()`: Called by mixin when overlay text appears (fallback detection)
+- `checkAndReelFish()`: Main fishing logic with pixel detection
 - `reelAndRecast()`: Reels in and schedules recast
 - `randomCrosshairMovement()`: Anti-AFK movement
 - `findLeatherBootsInHotbar()`: Scans for leather boots
 - `processLeatherBootsSequence()`: State machine for boots handling
+
+### Pixel Detector (PixelDetector.java)
+
+**Purpose**: Monitors specific screen coordinates to detect fishing indicators via color matching
+
+**Key Features:**
+- Reads pixel colors directly from the framebuffer using OpenGL
+- Converts scaled screen coordinates to framebuffer coordinates
+- Samples multiple pixels in a horizontal line for reliability
+- Uses color range matching to handle anti-aliasing and shadows
+
+**Detection Strategy:**
+1. Calculate action bar position (Y = screenHeight - 68)
+2. Sample 5 pixels in a horizontal line around screen center
+3. Check each pixel against green exclamation mark color ranges
+4. Check each pixel against yellow text color ranges
+5. Require 2+ matches to confirm detection
+
+**Color Thresholds:**
+- Green exclamation: R(60-120), G(220-255), B(60-120), A(>200)
+- Yellow text: R(220-255), G(220-255), B(50-120), A(>200)
+
+**Performance:**
+- Only runs on render thread for safe framebuffer access
+- Checks every 2 ticks (10 times per second)
+- Minimal performance impact
 
 ### Mixin (InGameHudMixin.java)
 
@@ -152,12 +188,15 @@ build/libs/estonic-autofishing-1.0.0.jar
 ## Configuration
 
 Currently, the mod has no configuration file. All settings are hardcoded:
-- Toggle key: `K`
+- Toggle key: `F`
 - Leather boots check interval: 3 seconds
 - Crosshair movement range: ±1 degree
 - Velocity threshold for bite detection: 0.15
+- Pixel check interval: 2 ticks (0.1 seconds)
+- Pixel sample count: 5 horizontal samples
+- Required color matches: 2 out of 5 samples
 
-To change these, edit `EstonicAutofishing.java` and rebuild.
+To change these, edit `EstonicAutofishing.java` or `PixelDetector.java` and rebuild.
 
 ## Compatibility
 
@@ -177,12 +216,16 @@ To change these, edit `EstonicAutofishing.java` and rebuild.
 2. **Lure Enchantment**: Works with lure but may need timing adjustments
 3. **Moving Water**: Works best in still water
 4. **Leather Boots**: Only detects in hotbar (slots 0-8), not full inventory
+5. **Pixel Detection**: May need coordinate adjustment for different GUI scales or screen resolutions
+6. **Render Thread**: Pixel detection only works when on render thread (not an issue in normal gameplay)
 
 ## Future Enhancements (Not Implemented)
 
 - Configuration file for customizable settings
 - Support for other items beyond leather boots
-- Better detection of fish bites using particle effects
+- Configurable pixel detection coordinates and color ranges
+- GUI for adjusting detection settings in-game
+- Multiple GUI scale support with auto-adjustment
 - Configurable toggle key
 - Sound-based detection as additional fallback
 
@@ -195,8 +238,9 @@ To change these, edit `EstonicAutofishing.java` and rebuild.
 
 ### Fishing doesn't work
 - Ensure you're holding a fishing rod
-- Press `K` to verify mod is enabled
+- Press `F` to verify mod is enabled
 - Check that you're near water
+- If pixel detection isn't working, try different GUI scale settings
 
 ### Leather boots not detected
 - Ensure boots are in hotbar (not full inventory)

@@ -23,6 +23,7 @@ public class EstonicAutofishing implements ClientModInitializer {
     
     private static boolean enabled = false;
     private static KeyBinding toggleKey;
+    private static PixelDetector pixelDetector;
     
     private static boolean justCast = false;
     private static int castCooldown = 0;
@@ -31,9 +32,10 @@ public class EstonicAutofishing implements ClientModInitializer {
     private static int processingStep = 0;
     private static int previousSlot = -1;
     
-    // For detecting "Reel it in!" message
+    // For detecting "Reel it in!" message via pixels
     private static boolean reelItInDetected = false;
     private static int reelItInCooldown = 0;
+    private static int pixelCheckCooldown = 0;
     
     // For scheduled recast
     private static boolean needsRecast = false;
@@ -43,11 +45,15 @@ public class EstonicAutofishing implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Estonic Autofishing mod initializing...");
         
-        // Register toggle keybind (K key)
+        // Initialize pixel detector
+        MinecraftClient client = MinecraftClient.getInstance();
+        pixelDetector = new PixelDetector(client);
+        
+        // Register toggle keybind (F key)
         toggleKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.estonicautofishing.toggle",
             InputUtil.Type.KEYSYM,
-            GLFW.GLFW_KEY_K,
+            GLFW.GLFW_KEY_F,
             "category.estonicautofishing"
         ));
         
@@ -79,6 +85,9 @@ public class EstonicAutofishing implements ClientModInitializer {
             }
             if (reelItInCooldown > 0) {
                 reelItInCooldown--;
+            }
+            if (pixelCheckCooldown > 0) {
+                pixelCheckCooldown--;
             }
             
             // Handle scheduled recast
@@ -134,14 +143,25 @@ public class EstonicAutofishing implements ClientModInitializer {
         
         // Check if there's a fishing bobber
         if (client.player.fishHook != null) {
-            // Method 1: Check for "Reel it in!" message (most reliable)
+            // Method 1: Pixel-based detection for "Reel it in!" indicator
+            if (pixelCheckCooldown == 0 && !justCast) {
+                pixelCheckCooldown = 2; // Check every 2 ticks for performance
+                if (pixelDetector.detectFishingIndicator()) {
+                    LOGGER.info("Detected fish bite via pixel detection");
+                    reelAndRecast(client);
+                    return;
+                }
+            }
+            
+            // Method 2: Check for text-based "Reel it in!" message (from mixin)
             if (reelItInDetected && reelItInCooldown > 0) {
                 reelItInDetected = false;
+                LOGGER.info("Detected fish bite via text message");
                 reelAndRecast(client);
                 return;
             }
             
-            // Method 2: Check bobber velocity (fallback detection)
+            // Method 3: Check bobber velocity (fallback detection)
             if (!justCast) {
                 double velocity = client.player.fishHook.getVelocity().lengthSquared();
                 // When a fish bites, the bobber moves with significant velocity
